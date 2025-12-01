@@ -4,6 +4,8 @@ TokTik is a distributed streaming platform built for a Scalable Systems class at
 
 This repository contains backend microservices, video processing workers, and a Next.js frontend. The project explores security, scalability, integrity, and consistency while practicing containerization and orchestration.
 
+(Note that you should also implement CI/CD to continuously test and build the images online too)
+
 ## Key features
 
 - Microservices architecture (separate services for authentication, user, video processing, thumbnailing, websocket, etc.).
@@ -117,7 +119,6 @@ kubectl logs -l app=video-service
 
 ## Development tips & next steps
 
-- Add automated tests (unit + integration) for services. Tests will help with CI/CD.
 - Add a GitHub Actions or other CI pipeline to build images and run basic integration tests before deploying.
 - Add monitoring (Prometheus + Grafana) and structured logging to improve observability.
 - Consider using a managed S3/CDN for production-level performance.
