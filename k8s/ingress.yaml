@@ -1,0 +1,215 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: gateway-ingress
+#   annotations:
+#     ingressClassName: traefik
+#     # traefik.ingress.kubernetes.io/router.middlewares: default-sticky-session@kubernetescrd
+# spec:
+#   rules:
+#     - host: localhost
+#       http:
+#         paths:
+#           - path: /api/auth/
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: auth-service
+#                 port:
+#                   number: 8080
+#           - path: /api/user/
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: user-service
+#                 port:
+#                   number: 8080
+#           - path: /api/video/
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: video-service
+#                 port:
+#                   number: 8080
+
+#           - path: /api/ws/
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: websocket-service
+#                 port:
+#                   number: 8080
+
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: frontend-service
+#                 port:
+#                   number: 80
+
+#           # - path: /api/chunker/
+#           #   pathType: Prefix
+#           #   backend:
+#           #     service:
+#           #       name: video-chunker
+#           #       port:
+#           #         number: 8080
+
+#           # - path: /api/convert/
+#           #   pathType: Prefix
+#           #   backend:
+#           #     service:
+#           #       name: video-convertor
+#           #       port:
+#           #         number: 8080
+
+#           # - path: /api/thumb/
+#           #   pathType: Prefix
+#           #   backend:
+#           #     service:
+#           #       name: thumbnail-maker
+#           #       port:
+#           #         number: 8080
+
+
+
+
+# apiVersion: traefik.io/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: websocket-sticky
+#   namespace: default  # change to your namespace if needed
+# spec:
+#   stickySession:
+#     cookie:
+#       name: websocket-session
+#       httpOnly: true
+#       secure: true
+#       sameSite: none
+
+# ---
+
+# apiVersion: traefik.io/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: gateway-ingress
+#   namespace: default
+# spec:
+#   entryPoints:
+#     - web
+#     - websecure
+#   routes:
+#     - match: PathPrefix(`/api/auth/`)
+#       kind: Rule
+#       services:
+#         - name: auth-service
+#           port: 8080
+
+#     - match: PathPrefix(`/api/user/`)
+#       kind: Rule
+#       services:
+#         - name: user-service
+#           port: 8080
+
+#     - match: PathPrefix(`/api/video/`)
+#       kind: Rule
+#       services:
+#         - name: video-service
+#           port: 8080
+
+#     - match: PathPrefix(`/api/ws/`)
+#       kind: Rule
+#       services:
+#         - name: websocket-service
+#           port: 8080
+
+#     - match: PathPrefix(`/ws-server/`)  # 🔥 Only this route uses sticky session
+#       kind: Rule
+#       services:
+#         - name: websocket-server
+#           port: 8080
+#       middlewares:
+#         - name: websocket-sticky  # 👈 Sticky session middleware ONLY here
+
+#     - match: PathPrefix(`/`)
+#       kind: Rule
+#       services:
+#         - name: frontend-service
+#           port: 80
+
+
+
+
+
+
+
+
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway-ingress
+  annotations:
+    ingressClassName: traefik
+    # traefik.ingress.kubernetes.io/router.middlewares: default-cors@kubernetescrd
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api/auth/
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8080
+          - path: /api/user/
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 8080
+          - path: /api/video/
+            pathType: Prefix
+            backend:
+              service:
+                name: video-service
+                port:
+                  number: 8080
+          - path: /api/ws/
+            pathType: Prefix
+            backend:
+              service:
+                name: websocket-service
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
+          - path: /ws-server/
+            pathType: Prefix
+            backend:
+              service:
+                name: websocket-server
+                port:
+                  number: 8080
+
+
+          - path: /socket.io/
+            pathType: Prefix
+            backend:
+              service:
+                name: websocket-server
+                port:
+                  number: 8080
+           
+            # annotations:
+            #   traefik.ingress.kubernetes.io/router.middlewares: default-websocket-sticky@kubernetescrd
+
+

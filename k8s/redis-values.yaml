@@ -1,0 +1,46 @@
+# replica:
+#   readinessProbe:
+#     enabled: true
+#     initialDelaySeconds: 5
+#     timeoutSeconds: 5
+#     periodSeconds: 10
+#     successThreshold: 1
+#     failureThreshold: 5
+#   livenessProbe:
+#     enabled: true
+#     initialDelaySeconds: 30
+#     timeoutSeconds: 5
+#     periodSeconds: 10
+#     successThreshold: 1
+#     failureThreshold: 5
+
+
+
+
+cluster:
+  enabled: true
+
+auth:
+  enabled: true
+  password: redis
+  existingSecret: ""  # Important: Force using the password above, not an auto-generated secret
+
+persistence:
+  enabled: true
+  size: 8Gi
+
+replica:
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    timeoutSeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 5
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 5

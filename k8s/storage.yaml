@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: tok-storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"  # optional, only if you want it to be default
+provisioner: docker.io/hostpath  # your current local provisioner
+reclaimPolicy: Retain            # keeps data even after PVC is deleted
+volumeBindingMode: Immediate
+allowVolumeExpansion: true

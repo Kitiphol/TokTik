@@ -1,0 +1,7 @@
+broker: "amqp://guest:guest@rabbitmq:5672/"
+result_backend: "redis://redis:6379/0"
+default_queue: "machinery_tasks"
+exchange:         "machinery_exchange"
+exchange_type:    "direct"
+binding_key:      "machinery_tasks"
+result_expires_in: 3600

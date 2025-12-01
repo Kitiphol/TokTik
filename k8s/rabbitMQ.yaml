@@ -1,0 +1,230 @@
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: rabbitmq
+# spec:
+#   serviceName: rabbitmq-headless
+#   replicas: 1  # Set to 3 for production clustering
+#   selector:
+#     matchLabels:
+#       app: rabbitmq
+#   template:
+#     metadata:
+#       labels:
+#         app: rabbitmq
+#     spec:
+#       # In k8s/rabbitmq-app.yml, replace the containers section with this:
+#       # In k8s/rabbitmq-app.yml, replace the containers section with this corrected version:
+#       containers:
+#         - name: rabbitmq
+#           image: rabbitmq:3-management
+#           command: ["/bin/sh", "-c"]
+#           args:
+#             - |
+#               set -e
+#               # Correctly expand the environment variables using $VAR syntax
+#               export RABBITMQ_NODENAME="rabbit@$MY_POD_NAME.rabbitmq-headless.$NAMESPACE.svc.cluster.local"
+#               exec docker-entrypoint.sh rabbitmq-server
+#           ports:
+#             - name: amqp
+#               containerPort: 5672
+#             - name: management
+#               containerPort: 15672
+#             - name: epmd
+#               containerPort: 4369
+#             - name: cluster
+#               containerPort: 25672
+#           env:
+#             - name: MY_POD_NAME
+#               valueFrom:
+#                 fieldRef:
+#                   fieldPath: metadata.name
+#             - name: NAMESPACE
+#               valueFrom:
+#                 fieldRef:
+#                   fieldPath: metadata.namespace
+#             - name: RABBITMQ_NODENAME
+#               value: "rabbit@$(MY_POD_NAME).rabbitmq-headless.$(NAMESPACE).svc.cluster.local"
+#             - name: RABBITMQ_DEFAULT_USER
+#               value: guest
+#             - name: RABBITMQ_DEFAULT_PASS
+#               value: guest
+#             - name: RABBITMQ_ERLANG_COOKIE
+#               value: "secret-cookie" # Use a Secret in production
+#             - name: RABBITMQ_USE_LONGNAME
+#               value: "true"
+#           livenessProbe:
+#             exec:
+#               command: ["rabbitmq-diagnostics", "status"]
+#             # Give the pod 3 minutes to start before checking its health
+#             initialDelaySeconds: 30
+#             periodSeconds: 60
+#             # Give the command 30 seconds to respond before timing out
+#             timeoutSeconds: 30
+#             failureThreshold: 6
+#           readinessProbe:
+#             exec:
+#               command: ["rabbitmq-diagnostics", "check_port_connectivity"]
+#             # Give the pod 2 minutes before marking it as ready
+#             initialDelaySeconds: 30
+#             periodSeconds: 30
+#             # Give the command 30 seconds to respond before timing out
+#             timeoutSeconds: 30
+#             failureThreshold: 6
+#           volumeMounts:
+#             - name: data
+#               mountPath: /var/lib/rabbitmq
+#           resources:
+#             requests:
+#               memory: "256Mi"
+#               cpu: "100m"
+#             limits:
+#               memory: "512Mi"
+#               cpu: "200m"
+
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: data
+#       spec:
+#         accessModes: ["ReadWriteOnce"]
+#         storageClassName: local-path
+#         resources:
+#           requests:
+#             storage: 1Gi
+
+# ---
+# # Headless service for StatefulSet DNS names (for multiple stateful set )
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rabbitmq-headless
+# spec:
+#   clusterIP: None
+#   selector:
+#     app: rabbitmq
+#   ports:
+#     - name: epmd
+#       port: 4369
+#       targetPort: 4369
+#     - name: cluster
+#       port: 25672
+#       targetPort: 25672
+
+# ---
+# # Regular service for client access
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rabbitmq
+# spec:
+#   selector:
+#     app: rabbitmq
+#   ports:
+#     - name: amqp
+#       port: 5672
+#       targetPort: 5672
+#     - name: management
+#       port: 15672
+#       targetPort: 15672
+#   type: ClusterIP
+
+
+
+
+
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+spec:
+  serviceName: rabbitmq-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3.12-management
+          ports:
+            - name: amqp
+              containerPort: 5672
+            - name: management
+              containerPort: 15672
+            - name: epmd
+              containerPort: 4369
+            - name: cluster
+              containerPort: 25672
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: guest
+            - name: RABBITMQ_DEFAULT_PASS
+              value: guest
+            - name: RABBITMQ_ERLANG_COOKIE
+              value: "secret-cookie"
+            - name: RABBITMQ_USE_LONGNAME
+              value: "false"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "status"]
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 30
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "check_port_connectivity"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 30
+            failureThreshold: 6
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-headless
+spec:
+  clusterIP: None
+  selector:
+    app: rabbitmq
+  ports:
+    - name: epmd
+      port: 4369
+      targetPort: 4369
+    - name: cluster
+      port: 25672
+      targetPort: 25672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+  type: ClusterIP

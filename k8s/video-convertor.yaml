@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-convertor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-convertor
+  template:
+    metadata:
+      labels:
+        app: video-convertor
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: video-convertor
+          image: ghcr.io/kitiphol/videoconvertor:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: p2-secret
+          volumeMounts:
+            - name: machinery-config
+              mountPath: ./machinery.yaml
+              subPath: machinery.yaml
+      volumes:
+        - name: machinery-config
+          configMap:
+            name: machinery-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-convertor
+spec:
+  selector:
+    app: video-convertor
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

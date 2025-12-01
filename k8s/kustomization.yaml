@@ -1,0 +1,17 @@
+resources:
+  - secret.yaml
+  - machinery.yaml
+  - redis.yaml
+  - rabbitMQ.yaml
+  - postgresql-deployement.yaml
+  - auth-service-deployment.yaml
+  - user-service-deploy.yaml
+  - video-service-deployment.yaml
+  - websocket-service-deployment.yaml
+  - websocket-server-deployment.yaml
+  - thumbnail-maker-deployment.yaml
+  - video-chunker-deployment.yaml
+  - video-convertor.yaml
+  - frontend.yaml
+  - ingress.yaml
+

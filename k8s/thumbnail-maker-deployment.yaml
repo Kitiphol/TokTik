@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thumbnail-maker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thumbnail-maker
+  template:
+    metadata:
+      labels:
+        app: thumbnail-maker
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: thumbnail-maker
+          image: ghcr.io/kitiphol/thumbnailmaker:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: p2-secret
+          volumeMounts:
+            - name: machinery-config
+              mountPath: ./machinery.yaml
+              subPath: machinery.yaml
+      volumes:
+        - name: machinery-config
+          configMap:
+            name: machinery-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thumbnail-maker
+spec:
+  selector:
+    app: thumbnail-maker
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

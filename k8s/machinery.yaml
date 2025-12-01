@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: machinery-config
+data:
+  R2_ACCOUNT_ID: "bbb272c68917a80beec7f62d8843b983"
+  R2_ACCESS_KEY_ID: "e99424cd396ce54742efd8d055ef73e9"
+  R2_ACCESS_KEY_SECRET: "ec0f0ddbc96ffbfa21f7c357bcef7fed3ac3355e07962e48fffafc98f8272c78"
+  RABBITMQ_BROKER_URI: "amqp://guest:guest@rabbitmq:5672/"
+  RABBITMQ_BACKEND_URI: "redis://redis:6379/0"
+
+
+

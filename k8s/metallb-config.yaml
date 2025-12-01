@@ -1,0 +1,18 @@
+# metallb-config.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: public-ip-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 167.71.194.223/32  # your droplet’s public IP
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: public-ip-adv
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - public-ip-pool

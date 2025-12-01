@@ -1,0 +1,44 @@
+package publisher
+
+import (
+    "context"
+    "encoding/json"
+    "os"
+    "strings"
+    "fmt"
+    "github.com/redis/go-redis/v9"
+)
+
+var RedisClient *redis.ClusterClient
+
+// InitCluster reads REDIS_ADDRS and REDIS_PASSWORD from the environment.
+func InitCluster() {
+    addrsCSV := os.Getenv("REDIS_ADDRS")     
+    password := os.Getenv("REDIS_PASSWORD")   
+    addrs := strings.Split(addrsCSV, ",")
+
+    fmt.Print("Connecting to Redis cluster at: ", addrs, "\n")
+
+    RedisClient = redis.NewClusterClient(&redis.ClusterOptions{
+        Addrs:    addrs,
+        Password: password,
+    })
+
+
+    if err := RedisClient.Ping(context.Background()).Err(); err != nil {
+        // could be connection refused, auth failure, DNS lookup, etc.
+        fmt.Printf("❌ Redis cluster ping failed: %v\n", err)
+        // you can choose to os.Exit(1) here, or retry, or just leave RedisClient nil
+    } else {
+        fmt.Println("✅ Connected to Redis cluster")
+    }
+}
+
+// Publish marshals `msg` to JSON and PUBLISH-es it on `channel`.
+func Publish(channel string, msg interface{}) error {
+    b, err := json.Marshal(msg)
+    if err != nil {
+        return err
+    }
+    return RedisClient.Publish(context.Background(), channel, b).Err()
+}

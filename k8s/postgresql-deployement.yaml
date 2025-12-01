@@ -1,0 +1,149 @@
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: postgres-storage
+# provisioner: k8s.io/minikube-hostpath  # Use correct provisioner for your environment (e.g., `docker.io/hostpath`, or `rook-ceph.rbd`)
+# volumeBindingMode: Immediate
+
+
+---
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: postgres
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: postgres
+#   template:
+#     metadata:
+#       labels:
+#         app: postgres
+#     spec:
+#       containers:
+#         - name: postgres
+#           image: postgres:latest
+#           ports:
+#             - containerPort: 5432
+#           env:
+#             - name: POSTGRES_DB
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: p2-secret
+#                   key: POSTGRES_DB
+#             - name: POSTGRES_USER
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: p2-secret
+#                   key: POSTGRES_USER
+#             - name: POSTGRES_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: p2-secret
+#                   key: POSTGRES_PASS
+#           volumeMounts:
+#             - name: postgres-storage
+#               mountPath: /var/lib/postgresql/data
+#       volumes:
+#         - name: postgres-storage
+#           emptyDir: {}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: postgres
+# spec:
+#   selector:
+#     app: postgres
+#   ports:
+#     - protocol: TCP
+#       port: 5432
+#       targetPort: 5432
+#   type: ClusterIP
+
+
+
+
+
+
+
+
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: default
+  labels:
+    app: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: p2-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: p2-secret
+                  key: POSTGRES_DB
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: p2-secret
+                  key: POSTGRES_PASS
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+        # Set to your working StorageClass. Leave empty ("") for manual PV, or use e.g. local-path if installed.
+        storageClassName: local-path
+
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: default
+spec:
+  clusterIP: None  # Headless service — required for StatefulSet
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
